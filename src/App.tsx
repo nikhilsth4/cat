@@ -1,17 +1,29 @@
 import React, { useCallback, useState } from "react";
 import Card from "./components/Card";
 import documentsData from "./data.json";
-import { DocumentInterface, DocumentTypeInterface } from "./types/document";
-import { DragDropContext, Draggable, Droppable, DropResult } from "@hello-pangea/dnd";
+import { DocumentInterface } from "./types/document";
+import {
+  DragDropContext,
+  Draggable,
+  Droppable,
+  DropResult,
+} from "@hello-pangea/dnd";
+import { documentToImage } from "./functions/helper";
 
-
+interface OverlayInterface {
+  isVisible: boolean;
+  imageSrc?: string;
+}
 
 const App = (): JSX.Element => {
-  const [documents, setDocuments] = useState<DocumentInterface[]>(documentsData as DocumentInterface[]);
-  const [overlay, setOverlay] = useState<{isVisible:boolean;imageSrc?:string}>({ isVisible: false });
+  const [documents, setDocuments] = useState<DocumentInterface[]>(
+    documentsData as DocumentInterface[]
+  );
+
+  const [overlay, setOverlay] = useState<OverlayInterface>({ isVisible: false });
 
   const openOverlay = (item: DocumentInterface) => {
-    setOverlay({ isVisible: true, imageSrc: CatImage(item.type) });
+    setOverlay({ isVisible: true, imageSrc: documentToImage(item.type) });
   };
 
   const closeOverlay = () => {
@@ -31,7 +43,7 @@ const App = (): JSX.Element => {
     };
   }, [handleKeyDown]);
 
-  const handleOnDragEnd = (result:DropResult) => {
+  const handleOnDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
     const items = Array.from(documents);
@@ -51,19 +63,21 @@ const App = (): JSX.Element => {
             {...provided.droppableProps}
           >
             {documents.map((doc, index) => (
-              <Draggable key={doc.type} draggableId={doc.type} index={index}>
+              <Draggable key={`${doc.type}${doc.title}`} draggableId={`${doc.type}${doc.title}`} index={index}>
                 {(provided, snapshot) => (
                   <div
                     ref={provided.innerRef}
                     {...provided.draggableProps}
                     {...provided.dragHandleProps}
-                    className={`p-2 ${snapshot.isDragging ? "bg-blue-100" : "bg-white"}`}
+                    className={`p-2 ${
+                      snapshot.isDragging ? "bg-blue-100" : "bg-white"
+                    }`}
                     onClick={() => openOverlay(doc)}
                   >
                     <Card
                       key={`${doc.position}-${doc.title}`}
                       title={doc.title}
-                      imageSrc={CatImage(doc.type)}
+                      imageSrc={documentToImage(doc.type)}
                     />
                   </div>
                 )}
@@ -75,38 +89,19 @@ const App = (): JSX.Element => {
       </Droppable>
 
       {overlay.isVisible && (
-          <div
-            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
-            onClick={closeOverlay}
-          >
-            <img
-              src={overlay.imageSrc}
-              alt="Overlay"
-              className="max-w-full max-h-full"
-            />
-          </div>
-        )}
+        <div
+          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+          onClick={closeOverlay}
+        >
+          <img
+            src={overlay.imageSrc}
+            alt="Overlay"
+            className="max-w-full max-h-full"
+          />
+        </div>
+      )}
     </DragDropContext>
   );
 };
-
-
-
-function CatImage(type: DocumentTypeInterface): string {
-  switch (type) {
-    case "bank-draft":
-      return "cats/cat0.jpg";
-    case "bill-of-lading":
-      return "cats/cat1.jpg";
-    case "invoice":
-      return "cats/cat2.jpg";
-    case "bank-draft-2":
-      return "cats/cat3.jpg";
-    case "bill-of-lading-2":
-      return "cats/cat4.jpg";
-    default:
-      return "cats/cat0.jpg";
-  }
-}
 
 export default App;
