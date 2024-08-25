@@ -2,6 +2,10 @@ import { http, HttpResponse } from "msw";
 import documentsData from "../data.json";
 import { DocumentInterface } from "../types/document";
 
+interface PostRequestInterface {
+  documents: DocumentInterface[];
+}
+
 const loadInitialData = () => {
   const storedData = localStorage.getItem("documents");
   if (!storedData) {
@@ -19,9 +23,8 @@ export const handlers = [
   }),
 
   http.post("/api/documents", async ({ request }) => {
-    const documents = await request.json();
+    const documents = await request.json() as PostRequestInterface;
 
-    // @ts-expect-error documents is sent from frontend
     localStorage.setItem("documents", JSON.stringify(documents.documents));
     return HttpResponse.json(documents, { status: 201 });
   }),
