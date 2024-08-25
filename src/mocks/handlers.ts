@@ -21,6 +21,7 @@ export const handlers = [
   http.post("/api/documents", async ({ request }) => {
     const documents = await request.json();
 
+    // @ts-expect-error documents is sent from frontend
     localStorage.setItem("documents", JSON.stringify(documents.documents));
     return HttpResponse.json(documents, { status: 201 });
   }),

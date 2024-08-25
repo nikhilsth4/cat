@@ -10,6 +10,8 @@
 ## How to Run the Project
 
 ### Prerequisites
+
+A. Running with Node.js
 Make sure you have Node.js and npm (or yarn) installed.
 
 1. Clone the repository:
@@ -33,3 +35,17 @@ Make sure you have Node.js and npm (or yarn) installed.
     ```
 
 4. Open your browser and go to `http://localhost:5173`.
+
+B. Running with docker
+
+1. Build the project
+    ```bash
+    docker build -t image-name .
+    ```
+
+2. Run the project
+    ```bash
+    docker run -d -p 3000:80 image-name
+    ```
+
+3. Open the browser and go to `http://localhost:3000`.

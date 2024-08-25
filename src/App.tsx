@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Card from "./components/Card";
 import { DocumentInterface, OverlayInterface } from "./types/document";
 import {
@@ -88,10 +88,10 @@ const App = (): JSX.Element => {
 
     const interval = setInterval(() => {
       if (lastSaveTime) {
-        const secondsSinceSave = Math.floor(
-          (new Date().getTime() - lastSaveTime.getTime()) / 1000
+        const minutesSinceSave = Math.floor(
+          (new Date().getTime() - lastSaveTime.getTime()) / 60000
         );
-        setTimeSinceLastSave(secondsSinceSave);
+        setTimeSinceLastSave(minutesSinceSave);
       }
     }, 1000);
 
@@ -102,7 +102,13 @@ const App = (): JSX.Element => {
   }
   return (
     <DragDropContext onDragEnd={handleOnDragEnd}>
-      <h1>{timeSinceLastSave}</h1>
+      {timeSinceLastSave || timeSinceLastSave === 0 ? (
+        <h1 className="w-full p-4 ml-auto">
+          Time since Last Save {timeSinceLastSave} minutes
+        </h1>
+      ) : (
+        ""
+      )}
       <Droppable droppableId="documents" direction="horizontal">
         {(provided) => (
           <div
