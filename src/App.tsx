@@ -1,6 +1,5 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Card from "./components/Card";
-import documentsData from "./data.json";
 import { DocumentInterface } from "./types/document";
 import {
   DragDropContext,
@@ -16,11 +15,11 @@ interface OverlayInterface {
 }
 
 const App = (): JSX.Element => {
-  const [documents, setDocuments] = useState<DocumentInterface[]>(
-    documentsData as DocumentInterface[]
-  );
+  const [documents, setDocuments] = useState<DocumentInterface[]>([]);
 
-  const [overlay, setOverlay] = useState<OverlayInterface>({ isVisible: false });
+  const [overlay, setOverlay] = useState<OverlayInterface>({
+    isVisible: false,
+  });
 
   const openOverlay = (item: DocumentInterface) => {
     setOverlay({ isVisible: true, imageSrc: documentToImage(item.type) });
@@ -36,12 +35,18 @@ const App = (): JSX.Element => {
     }
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [handleKeyDown]);
+
+  useEffect(() => {
+    fetch("/api/documents")
+      .then((res) => res.json())
+      .then((res) => setDocuments(res));
+  }, []);
 
   const handleOnDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -58,31 +63,36 @@ const App = (): JSX.Element => {
       <Droppable droppableId="documents" direction="horizontal">
         {(provided) => (
           <div
-            className="m-10 grid grid-cols-3 gap-4"
+            className="grid grid-cols-3 gap-4 m-10"
             ref={provided.innerRef}
             {...provided.droppableProps}
           >
-            {documents.map((doc, index) => (
-              <Draggable key={`${doc.type}${doc.title}`} draggableId={`${doc.type}${doc.title}`} index={index}>
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    {...provided.dragHandleProps}
-                    className={`p-2 ${
-                      snapshot.isDragging ? "bg-blue-100" : "bg-white"
-                    }`}
-                    onClick={() => openOverlay(doc)}
-                  >
-                    <Card
-                      key={`${doc.position}-${doc.title}`}
-                      title={doc.title}
-                      imageSrc={documentToImage(doc.type)}
-                    />
-                  </div>
-                )}
-              </Draggable>
-            ))}
+            {documents &&
+              documents.map((doc, index) => (
+                <Draggable
+                  key={`${doc.type}${doc.title}`}
+                  draggableId={`${doc.type}${doc.title}`}
+                  index={index}
+                >
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      className={`p-2 ${
+                        snapshot.isDragging ? "bg-blue-100" : "bg-white"
+                      }`}
+                      onClick={() => openOverlay(doc)}
+                    >
+                      <Card
+                        key={`${doc.position}-${doc.title}`}
+                        title={doc.title}
+                        imageSrc={documentToImage(doc.type)}
+                      />
+                    </div>
+                  )}
+                </Draggable>
+              ))}
             {provided.placeholder}
           </div>
         )}
