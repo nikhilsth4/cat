@@ -1,10 +1,11 @@
 import { http, HttpResponse } from "msw";
 import documentsData from "../data.json";
+import { DocumentInterface } from "../types/document";
 
 const loadInitialData = () => {
   const storedData = localStorage.getItem("documents");
   if (!storedData) {
-    const initialData = documentsData;
+    const initialData = documentsData as DocumentInterface[];
     localStorage.setItem("documents", JSON.stringify(initialData));
     return initialData;
   }
@@ -17,11 +18,10 @@ export const handlers = [
     return HttpResponse.json(documents);
   }),
 
-  http.post("/api/documents", ({ request }) => {
-    const newDocument = request.body;
-    const documents = loadInitialData();
-    documents.push(newDocument);
-    localStorage.setItem("documents", JSON.stringify(documents));
-    return HttpResponse.json(newDocument, { status: 201 });
+  http.post("/api/documents", async ({ request }) => {
+    const documents = await request.json();
+
+    localStorage.setItem("documents", JSON.stringify(documents.documents));
+    return HttpResponse.json(documents, { status: 201 });
   }),
 ];

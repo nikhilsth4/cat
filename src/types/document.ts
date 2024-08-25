@@ -5,3 +5,8 @@ export interface DocumentInterface {
     title: string;
     position: number;
 }
+
+export interface OverlayInterface {
+    isVisible: boolean;
+    imageSrc?: string;
+  }

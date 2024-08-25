@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Card from "./components/Card";
-import { DocumentInterface } from "./types/document";
+import { DocumentInterface, OverlayInterface } from "./types/document";
 import {
   DragDropContext,
   Draggable,
@@ -8,18 +8,20 @@ import {
   DropResult,
 } from "@hello-pangea/dnd";
 import { documentToImage } from "./functions/helper";
-
-interface OverlayInterface {
-  isVisible: boolean;
-  imageSrc?: string;
-}
+import axios from "axios";
+import Spinner from "./components/Spinner";
 
 const App = (): JSX.Element => {
   const [documents, setDocuments] = useState<DocumentInterface[]>([]);
-
   const [overlay, setOverlay] = useState<OverlayInterface>({
     isVisible: false,
   });
+  const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
+  const [timeSinceLastSave, setTimeSinceLastSave] = useState<number | null>(
+    null
+  );
 
   const openOverlay = (item: DocumentInterface) => {
     setOverlay({ isVisible: true, imageSrc: documentToImage(item.type) });
@@ -56,10 +58,51 @@ const App = (): JSX.Element => {
     items.splice(result.destination.index, 0, reorderedItem);
 
     setDocuments(items);
+    setHasChanges(true);
   };
 
+  useEffect(() => {
+    const saveData = async () => {
+      if (!hasChanges) return;
+
+      setIsSaving(true);
+
+      await axios.post("/api/documents", { documents }).then(() => {
+        setIsSaving(false);
+        setHasChanges(false);
+        setLastSaveTime(new Date());
+      });
+    };
+
+    const interval = setInterval(() => {
+      if (hasChanges) {
+        saveData();
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [hasChanges, documents]);
+
+  useEffect(() => {
+    if (!lastSaveTime) return;
+
+    const interval = setInterval(() => {
+      if (lastSaveTime) {
+        const secondsSinceSave = Math.floor(
+          (new Date().getTime() - lastSaveTime.getTime()) / 1000
+        );
+        setTimeSinceLastSave(secondsSinceSave);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastSaveTime]);
+  if (isSaving) {
+    return <Spinner />;
+  }
   return (
     <DragDropContext onDragEnd={handleOnDragEnd}>
+      <h1>{timeSinceLastSave}</h1>
       <Droppable droppableId="documents" direction="horizontal">
         {(provided) => (
           <div
